@@ -4,7 +4,8 @@ import time
 
 import adhawkapi
 import adhawkapi.frontend
-
+from pyquaternion import Quaternion
+import matplotlib.pyplot as plt
 
 class FrontendData:
     ''' BLE Frontend '''
@@ -83,6 +84,19 @@ class FrontendData:
     def _handle_tracker_disconnect(self):
         print("Tracker disconnected")
 
+    # Matplot lib func
+    def _matplotlib_func(x, y):
+        fig, ax = plt.sublots()
+        ax.plot([0,10,10,0,0], [0, 0, 10, 10, 0])
+        ax.plot(x, y,'ro', label = 'Coord')
+        # Customize the plot (add labels, legend, etc.)
+        ax.set_xlabel('X-axis')
+        ax.set_ylabel('Y-axis')
+        ax.set_title('2D Map with Coordinate')
+        ax.legend()
+
+        # Display the plot
+        plt.show()
 
 def main():
     ''' App entrypoint '''
