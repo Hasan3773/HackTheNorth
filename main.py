@@ -8,9 +8,12 @@ import adhawkapi.frontend
 from pyquaternion import Quaternion
 import matplotlib.pyplot as plt
 import numpy
+import math
 
 class FrontendData:
     ''' BLE Frontend '''
+    
+            
 
     def __init__(self):
         # Instantiate an API object
@@ -32,6 +35,8 @@ class FrontendData:
         # When the api detects a connection to a MindLink, this function will be run.
         self._api.start(tracker_connect_cb=self._handle_tracker_connect,
                         tracker_disconnect_cb=self._handle_tracker_disconnect)
+        
+        self._matplotlib_func()
 
 
     def shutdown(self):
@@ -46,7 +51,7 @@ class FrontendData:
         mag = None
         if et_data.gaze is not None:
             xvec, yvec, zvec, vergence = et_data.gaze
-            mag = math.sqr(xvec**2, yvec**2, zvec**2)
+            mag = math.sqrt(xvec**2 + yvec**2 + zvec**2)
             uvec = numpy.array([xvec/mag, yvec/mag, zvec/mag])
             print(f'Gaze={xvec:.2f},y={yvec:.2f},z={zvec:.2f},vergence={vergence:.2f}')
 
@@ -72,11 +77,13 @@ class FrontendData:
 
 
         print("--------------------")
-
-
-        if rotator and uvec and mag:
-            absvec = rotator.rotate(uvec)
-            absvec = numpy.array([absvec[0] * mag, absvec[1] * mag, absvec[2] * mag])
+        
+        
+        if rotator is not None and uvec is not None and mag is not None:
+            rvec = rotator.rotate(uvec)
+            absvec = numpy.array([rvec[0] * mag, rvec[1] * mag, rvec[2] * mag])
+            ax.plot(absvec[0], absvec[2], 'ro', label = 'Coordinate')
+        
 
 
         print("--------------------")
@@ -101,7 +108,7 @@ class FrontendData:
 
 
         self._api.set_et_stream_control([
-            adhawkapi.EyeTrackingStreamTypes.GAZE,
+            adhawkapi.EyeTrackingStreamTypes.GAZE,   
             adhawkapi.EyeTrackingStreamTypes.EYE_CENTER,
             adhawkapi.EyeTrackingStreamTypes.PUPIL_DIAMETER,
             adhawkapi.EyeTrackingStreamTypes.IMU_QUATERNION,
@@ -114,20 +121,6 @@ class FrontendData:
 
     def _handle_tracker_disconnect(self):
         print("Tracker disconnected")
-
-   # Matplot lib func
-    def _matplotlib_func(x, y):
-        fig, ax = plt.sublots()
-        ax.plot([0,10,10,0,0], [0, 0, 10, 10, 0])
-        ax.plot(x, y,'ro', label = 'Coord')
-        # Customize the plot (add labels, legend, etc.)
-        ax.set_xlabel('X-axis')
-        ax.set_ylabel('Y-axis')
-        ax.set_title('2D Map with Coordinate')
-        ax.legend()
-
-        # Display the plot
-        plt.show()
 
 def main():
     ''' App entrypoint '''
