@@ -16,6 +16,7 @@ class FrontendData:
             
 
     def __init__(self):
+        _matplotlib_func()
         # Instantiate an API object
         # TODO: Update the device name to match your device
         self._api = adhawkapi.frontend.FrontendApi(ble_device_name='ADHAWK MINDLINK-304')
