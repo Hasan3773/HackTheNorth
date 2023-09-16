@@ -13,6 +13,7 @@ class FrontendData:
     ''' BLE Frontend '''
 
     def __init__(self):
+        _matplotlib_func()
         # Instantiate an API object
         # TODO: Update the device name to match your device
         self._api = adhawkapi.frontend.FrontendApi(ble_device_name='ADHAWK MINDLINK-304')
@@ -77,6 +78,8 @@ class FrontendData:
         if rotator and uvec and mag:
             absvec = rotator.rotate(uvec)
             absvec = numpy.array([absvec[0] * mag, absvec[1] * mag, absvec[2] * mag])
+            ax.plot(absvec[0], absvec[2],'ro', label = 'Coordinate')
+
 
 
         print("--------------------")
@@ -116,10 +119,10 @@ class FrontendData:
         print("Tracker disconnected")
 
    # Matplot lib func
-    def _matplotlib_func(x, y):
+    def _matplotlib_func():
         fig, ax = plt.sublots()
         ax.plot([0,10,10,0,0], [0, 0, 10, 10, 0])
-        ax.plot(x, y,'ro', label = 'Coord')
+        ax.plot(0, 0,'ro', label = 'Coordinate')
         # Customize the plot (add labels, legend, etc.)
         ax.set_xlabel('X-axis')
         ax.set_ylabel('Y-axis')
