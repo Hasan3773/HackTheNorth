@@ -9,6 +9,7 @@ from pyquaternion import Quaternion
 import numpy
 import math
 import turtle
+import socket
 
 lastx = None
 lasty = None    
@@ -19,6 +20,21 @@ x2 = None
 y2 = None
 twoPoint = False
 
+""" #socket setup
+port = 8833 #just some random number
+host = '192.168.137.139' #server port
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #create socket
+s.bind((host, port)) #connect to socket
+s.listen(5) #start listening for connections from the client
+
+#debug
+print("Socket initialized")
+print(host)
+
+while True:
+    clientsocket, address = s.accept() #yield for client conenction and set vars to client data
+    print(f"Connection from {address} has been established.") """
 
 
 class FrontendData:
@@ -46,7 +62,6 @@ class FrontendData:
         self._api.start(tracker_connect_cb=self._handle_tracker_connect,
                         tracker_disconnect_cb=self._handle_tracker_disconnect)
         
-        self._matplotlib_func()
 
 
     def shutdown(self):
@@ -98,16 +113,17 @@ class FrontendData:
 
      #   print("--------------------")
 
-
+    @staticmethod
     def _handle_events(event_type, timestamp, *args):
         if event_type == adhawkapi.Events.BLINK:
             duration = args[0]
+            print(duration)
 
-            if duration > 2:
+            if duration > 1:
                 if twoPoint:
-                    print('hihihihihihihihihih')
                     x2 = lastx
                     y2 = lasty
+                    print(str(x2)+","+str(y2))
                     # do the calc and send to robot
 
                     #distance
@@ -119,9 +135,14 @@ class FrontendData:
                     if (x2 < x1):
                         Cangle = Cangle + math.pi
 
+                    #network logic
+                    print("Dist: " + str(dist))
+                    print("Angle: " + str(Cangle))
+
                 else: 
                     x1 = lastx
                     y1 = lasty
+                    print(str(x1)+","+str(y1))
 
                 twoPoint = not twoPoint
 
