@@ -6,17 +6,15 @@ import time
 import adhawkapi
 import adhawkapi.frontend
 from pyquaternion import Quaternion
-import matplotlib.pyplot as plt
 import numpy
 import math
+import turtle
 
 class FrontendData:
-    ''' BLE Frontend '''
-    
-            
+    ''' BLE Frontend '''     
+    t = turtle.Turtle()
 
     def __init__(self):
-        _matplotlib_func()
         # Instantiate an API object
         # TODO: Update the device name to match your device
         self._api = adhawkapi.frontend.FrontendApi(ble_device_name='ADHAWK MINDLINK-304')
@@ -83,9 +81,10 @@ class FrontendData:
         if rotator is not None and uvec is not None and mag is not None:
             rvec = rotator.rotate(uvec)
             absvec = numpy.array([rvec[0] * mag, rvec[1] * mag, rvec[2] * mag])
-            ax.plot(absvec[0], absvec[2], 'ro', label = 'Coordinate')
-        
 
+            turtle.pos(0.5, 0.5)
+            turtle.dot(1, "blue")
+    
 
         print("--------------------")
 
