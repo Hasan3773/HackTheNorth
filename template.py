@@ -4,7 +4,8 @@ import time
 
 import adhawkapi
 import adhawkapi.frontend
-import keyboard
+import time
+
 
 class FrontendData:
     ''' BLE Frontend '''
@@ -36,23 +37,24 @@ class FrontendData:
         ''' Handles the latest et data '''
         if et_data.gaze is not None:
             xvec, yvec, zvec, vergence = et_data.gaze
-            print(f'Gaze={xvec:.2f},y={yvec:.2f},z={zvec:.2f},vergence={vergence:.2f}')
+            # print(f'Gaze={xvec:.2f},y={yvec:.2f},z={zvec:.2f},vergence={vergence:.2f}')
 
         if et_data.eye_center is not None:
             if et_data.eye_mask == adhawkapi.EyeMask.BINOCULAR:
                 rxvec, ryvec, rzvec, lxvec, lyvec, lzvec = et_data.eye_center
-                print(f'Eye center: Left=(x={lxvec:.2f},y={lyvec:.2f},z={lzvec:.2f}) '
-                      f'Right=(x={rxvec:.2f},y={ryvec:.2f},z={rzvec:.2f})')
+                # print(f'Eye center: Left=(x={lxvec:.2f},y={lyvec:.2f},z={lzvec:.2f}) '
+                #       f'Right=(x={rxvec:.2f},y={ryvec:.2f},z={rzvec:.2f})')
 
         if et_data.pupil_diameter is not None:
             if et_data.eye_mask == adhawkapi.EyeMask.BINOCULAR:
                 rdiameter, ldiameter = et_data.pupil_diameter
-                print(f'Pupil diameter: Left={ldiameter:.2f} Right={rdiameter:.2f}')
+                # print(f'Pupil diameter: Left={ldiameter:.2f} Right={rdiameter:.2f}')
+                # time.sleep(3)
 
         if et_data.imu_quaternion is not None:
             if et_data.eye_mask == adhawkapi.EyeMask.BINOCULAR:
                 x, y, z, w = et_data.imu_quaternion
-                print(f'IMU: x={x:.2f},y={y:.2f},z={z:.2f},w={w:.2f}')
+                # print(f'IMU: x={x:.2f},y={y:.2f},z={z:.2f},w={w:.2f}')
 
     @staticmethod
     def _handle_events(event_type, timestamp, *args):
@@ -61,10 +63,10 @@ class FrontendData:
             print(f'Got blink: {timestamp} {duration}')
         if event_type == adhawkapi.Events.EYE_CLOSED:
             eye_idx = args[0]
-            print(f'Eye Close: {timestamp} {eye_idx}')
+            # print(f'Eye Close: {timestamp} {eye_idx}')
         if event_type == adhawkapi.Events.EYE_OPENED:
             eye_idx = args[0]
-            print(f'Eye Open: {timestamp} {eye_idx}')
+            # print(f'Eye Open: {timestamp} {eye_idx}')
 
     def _handle_tracker_connect(self):
         print("Tracker connected")
@@ -87,8 +89,10 @@ class FrontendData:
 def main():
     ''' App entrypoint '''
     frontend = FrontendData()
-
-    if keyboard.is_pressed("q"):
+    try:
+        while True:
+            time.sleep(1)
+    except (KeyboardInterrupt, SystemExit):
         frontend.shutdown()
 
 if __name__ == '__main__':
