@@ -19,6 +19,7 @@ y1 = None
 x2 = None
 y2 = None
 twoPoint = False
+LastBlink = 0
 
 """ #socket setup
 port = 8833 #just some random number
@@ -62,6 +63,9 @@ class FrontendData:
         self._api.start(tracker_connect_cb=self._handle_tracker_connect,
                         tracker_disconnect_cb=self._handle_tracker_disconnect)
         
+        global LastBlink
+        LastBlink = 0
+        
 
 
     def shutdown(self):
@@ -74,6 +78,9 @@ class FrontendData:
         ''' Handles the latest et data '''
         uvec = None
         mag = None
+        global lastx
+        global lasty
+
         if et_data.gaze is not None:
             xvec, yvec, zvec, vergence = et_data.gaze
             mag = math.sqrt(xvec**2 + yvec**2 + zvec**2)
@@ -98,28 +105,42 @@ class FrontendData:
             if et_data.eye_mask == adhawkapi.EyeMask.BINOCULAR:
                 x, y, z, w = et_data.imu_quaternion
                 rotator = Quaternion(axis=[x, y, z], angle=w)
-               # print(f'IMU: x={x:.2f},y={y:.2f},z={z:.2f},w={w:.2f}')
+                #print(f'IMU: x={x:.2f},y={y:.2f},z={z:.2f},w={w:.2f}')
 
 
-       # print("--------------------")
-        
+        #print("--------------------")
+        #print(str(rotator))
+        #print(str(uvec))
+        #print(str(mag))
         
         if rotator is not None and uvec is not None and mag is not None:
             rvec = rotator.rotate(uvec)
             absvec = numpy.array([rvec[0] * mag, rvec[1] * mag, rvec[2] * mag])
 
-            lastx = absvec[0]
-            lasty = absvec[2]
+            if absvec[0] is not None:
+                lastx = absvec[0]
+            if absvec[2] is not None:
+                lasty = absvec[2]
 
      #   print("--------------------")
 
     @staticmethod
     def _handle_events(event_type, timestamp, *args):
+        global LastBlink
+        global twoPoint
+        global lastx
+        global lasty
+        global x1
+        global y1
+        global x2
+        global y2
+
         if event_type == adhawkapi.Events.BLINK:
             duration = args[0]
-            print(duration)
+            #print(duration)
 
-            if duration > 1:
+            if timestamp - LastBlink < 0.8:
+                print("Double blink")
                 if twoPoint:
                     x2 = lastx
                     y2 = lasty
@@ -127,13 +148,18 @@ class FrontendData:
                     # do the calc and send to robot
 
                     #distance
-                    dist = math.sqrt((max(y1, y2) - min(y1, y2))**2 + (max(x1,x2) - min(y1, y2))**2)
+                    dist = math.sqrt((max(y1, y2) - min(y1, y2))**2 + (max(x1,x2) - min(x1, x2))**2)
 
                     #angle
                     Clength = math.sqrt(abs(x2-x1)**2 + (abs(y2-y1)+1)**2)
-                    Cangle = math.acos((Clength**2+1-dist**2)/(2*Clength*1))
+                    print("------")
+                    print((1+dist**2-Clength**2)/(2*dist*1))
+                    print(dist)
+                    print(Clength)
+                    print("------")
+                    Cangle = math.acos((1+dist**2-Clength**2)/(2*dist*1))
                     if (x2 < x1):
-                        Cangle = Cangle + math.pi
+                        Cangle = -Cangle
 
                     #network logic
                     print("Dist: " + str(dist))
@@ -146,14 +172,14 @@ class FrontendData:
 
                 twoPoint = not twoPoint
 
-            
+            LastBlink = timestamp
             print(f'Got blink: {timestamp} {duration}')
         if event_type == adhawkapi.Events.EYE_CLOSED:
             eye_idx = args[0]
-            print(f'Eye Close: {timestamp} {eye_idx}')
+            #print(f'Eye Close: {timestamp} {eye_idx}')
         if event_type == adhawkapi.Events.EYE_OPENED:
             eye_idx = args[0]
-            print(f'Eye Open: {timestamp} {eye_idx}')
+            #print(f'Eye Open: {timestamp} {eye_idx}')
    
 
         
