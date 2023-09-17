@@ -10,13 +10,24 @@ import numpy
 import math
 import turtle
 
+lastx = None
+lasty = None    
+BLINK_TIME = 2
+x1 = None
+y1 = None
+x2 = None
+y2 = None
+twoPoint = False
+
+
+
 class FrontendData:
-    ''' BLE Frontend '''     
-    t = turtle.Turtle()
+    ''' BLE Frontend ''' 
+    
 
     def __init__(self):
         # Instantiate an API object
-        # TODO: Update the device name to match your device
+        # TODO: Update the device name to match your device\
         self._api = adhawkapi.frontend.FrontendApi(ble_device_name='ADHAWK MINDLINK-304')
 
 
@@ -52,47 +63,69 @@ class FrontendData:
             xvec, yvec, zvec, vergence = et_data.gaze
             mag = math.sqrt(xvec**2 + yvec**2 + zvec**2)
             uvec = numpy.array([xvec/mag, yvec/mag, zvec/mag])
-            print(f'Gaze={xvec:.2f},y={yvec:.2f},z={zvec:.2f},vergence={vergence:.2f}')
+            #print(f'Gaze={xvec:.2f},y={yvec:.2f},z={zvec:.2f},vergence={vergence:.2f}')
 
 
         if et_data.eye_center is not None:
             if et_data.eye_mask == adhawkapi.EyeMask.BINOCULAR:
                 rxvec, ryvec, rzvec, lxvec, lyvec, lzvec = et_data.eye_center
-                print(f'Eye center: Left=(x={lxvec:.2f},y={lyvec:.2f},z={lzvec:.2f}) '
-                      f'Right=(x={rxvec:.2f},y={ryvec:.2f},z={rzvec:.2f})')
+               # print(f'Eye center: Left=(x={lxvec:.2f},y={lyvec:.2f},z={lzvec:.2f}) '
+                    #  f'Right=(x={rxvec:.2f},y={ryvec:.2f},z={rzvec:.2f})')
 
 
         if et_data.pupil_diameter is not None:
             if et_data.eye_mask == adhawkapi.EyeMask.BINOCULAR:
                 rdiameter, ldiameter = et_data.pupil_diameter
-                print(f'Pupil diameter: Left={ldiameter:.2f} Right={rdiameter:.2f}')
+                #print(f'Pupil diameter: Left={ldiameter:.2f} Right={rdiameter:.2f}')
 
         rotator = None
         if et_data.imu_quaternion is not None:
             if et_data.eye_mask == adhawkapi.EyeMask.BINOCULAR:
                 x, y, z, w = et_data.imu_quaternion
                 rotator = Quaternion(axis=[x, y, z], angle=w)
-                print(f'IMU: x={x:.2f},y={y:.2f},z={z:.2f},w={w:.2f}')
+               # print(f'IMU: x={x:.2f},y={y:.2f},z={z:.2f},w={w:.2f}')
 
 
-        print("--------------------")
+       # print("--------------------")
         
         
         if rotator is not None and uvec is not None and mag is not None:
             rvec = rotator.rotate(uvec)
             absvec = numpy.array([rvec[0] * mag, rvec[1] * mag, rvec[2] * mag])
 
-            turtle.pos(0.5, 0.5)
-            turtle.dot(1, "blue")
-    
+            lastx = absvec[0]
+            lasty = absvec[2]
 
-        print("--------------------")
+     #   print("--------------------")
 
 
-    @staticmethod
     def _handle_events(event_type, timestamp, *args):
         if event_type == adhawkapi.Events.BLINK:
             duration = args[0]
+
+            if duration > 2:
+                if twoPoint:
+                    print('hihihihihihihihihih')
+                    x2 = lastx
+                    y2 = lasty
+                    # do the calc and send to robot
+
+                    #distance
+                    dist = math.sqrt((max(y1, y2) - min(y1, y2))**2 + (max(x1,x2) - min(y1, y2))**2)
+
+                    #angle
+                    Clength = math.sqrt(abs(x2-x1)**2 + (abs(y2-y1)+1)**2)
+                    Cangle = math.acos((Clength**2+1-dist**2)/(2*Clength*1))
+                    if (x2 < x1):
+                        Cangle = Cangle + math.pi
+
+                else: 
+                    x1 = lastx
+                    y1 = lasty
+
+                twoPoint = not twoPoint
+
+            
             print(f'Got blink: {timestamp} {duration}')
         if event_type == adhawkapi.Events.EYE_CLOSED:
             eye_idx = args[0]
@@ -100,7 +133,9 @@ class FrontendData:
         if event_type == adhawkapi.Events.EYE_OPENED:
             eye_idx = args[0]
             print(f'Eye Open: {timestamp} {eye_idx}')
+   
 
+        
 
     def _handle_tracker_connect(self):
         print("Tracker connected")
@@ -123,6 +158,7 @@ class FrontendData:
         print("Tracker disconnected")
 
 def main():
+    print("hi")
     ''' App entrypoint '''
     frontend = FrontendData()
     try:
@@ -131,6 +167,6 @@ def main():
     except (KeyboardInterrupt, SystemExit):
         frontend.shutdown()
 
-
+        
 if __name__ == '__main__':
     main()
