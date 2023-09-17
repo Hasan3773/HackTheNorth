@@ -4,7 +4,7 @@ import time
 
 import adhawkapi
 import adhawkapi.frontend
-
+import keyboard
 
 class FrontendData:
     ''' BLE Frontend '''
@@ -87,10 +87,8 @@ class FrontendData:
 def main():
     ''' App entrypoint '''
     frontend = FrontendData()
-    try:
-        while True:
-            time.sleep(1)
-    except (KeyboardInterrupt, SystemExit):
+
+    if keyboard.is_pressed("q"):
         frontend.shutdown()
 
 if __name__ == '__main__':
